@@ -15,6 +15,10 @@ Filesystem      Size  Used Avail Use% Mounted on
 /dev/sdc1        21T   24K   20T   1% /ssdraid0
 ```
 
+## Issues
+* How to set a larger quota than 2 TB
+* Where put scratch?
+
 ## To do
 
 ### Short term
@@ -24,11 +28,6 @@ Filesystem      Size  Used Avail Use% Mounted on
 * ssh-key login setup
 
 
-#### Setup partitions (i.e. job queues)
-* Group wants an infinite queue?
-* We are 1 node, X cores, X CPUs
-* Default partition
-    * This is where users login, and where jobs without specified qos go
 
 #### User storage quota
 
@@ -45,8 +44,79 @@ Filesystem     Type   1K-blocks   Used   Available Use% Mounted on
 repquota -a
 ```
 
+```{bash}
+sudo vim /etc/fstab
+# then added ',usrquota':
+# /dev/disk/by-uuid/12825e18-edf6-4a37-8f1c-74943284b5ae /hddraid5 ext4 defaults,usrquota 0 1
+# /dev/disk/by-uuid/12825e18-edf6-4a37-8f1c-74943284b5ae /hddraid5 ext4 defaults 0 1
+
+
+sudo mount -o remount /hddraid5
+
+sudo quotaon /hddraid5
+
+# Now we have turned quota on, but it is not set to anything
+gonzalezlab@slurm:/$ sudo repquota -s -a
+*** Report for user quotas on device /dev/sdb1
+Block grace time: 7days; Inode grace time: 7days
+                        Space limits                File limits
+User            used    soft    hard  grace    used  soft  hard  grace
+----------------------------------------------------------------------
+root      --     24K      0K      0K              3     0     0       
+mcoronado --     24K      0K      0K              7     0     0       
+gabmm     --     24K      0K      0K              7     0     0       
+dmckeown  --    602M      0K      0K           4404     0     0       
+fradest   --     24K      0K      0K              7     0     0       
+gsabaris  --     16K      0K      0K              4     0     0       
+
+# Setting quotas for users
+# The four numbers are limits for soft space, hard space, soft file numbers, hard file numbers
+# Soft limits can be surpassed but give a warning, hard limits cannot be passed
+# 0 means no limit
+
+sudo setquota -u dmckeown 2147483647 0 0 0 /hddraid5
+
+# You can use edquota -u dmckeown to change these later
+
+
+# So the quota measures storage in Blocks, and you can check what your system block size is:
+sudo tune2fs -l /dev/sdb1 | grep 'Block size'
+
+gonzalezlab@slurm:/$ sudo repquota -s -a
+*** Report for user quotas on device /dev/sdb1
+Block grace time: 7days; Inode grace time: 7days
+                        Space limits                File limits
+User            used    soft    hard  grace    used  soft  hard  grace
+----------------------------------------------------------------------
+root      --     24K      0K      0K              3     0     0       
+mcoronado --     24K      0K      0K              7     0     0       
+gabmm     --     24K      0K      0K              7     0     0       
+dmckeown  --    602M   2048G      0K           4404     0     0       
+fradest   --     24K      0K      0K              7     0     0       
+gsabaris  --     16K      0K      0K              4     0     0      
+
+
+```
+* The system block size must be changed to allow a larger quota, e.g. I cannot set a limit of 20 TB:
+
+```{bash}
+gonzalezlab@slurm:/$ sudo setquota -u dmckeown 0 5368709120 0 0 /hddraid5
+setquota: Cannot set quota for user 1003 from kernel on /dev/sdb1: Numerical result out of range
+setquota: Cannot write quota for 1003 on /dev/sdb1: Numerical result out of range
+```
+So for now we have soft limits of 2 TB, but I can't find a way to set limits beyond that
+
+#### Setup partitions (i.e. job queues)
+* Group wants an infinite queue?
+* Partition define nodes and walltime, qos can set the resources - so you can do fast partition, bigmem qos
+* We are 1 node, X cores, X CPUs
+* Default partition
+    * This is where users login, and where jobs without specified qos go
+
 #### Scratch setup
 * We won't use an auto delete for now, but request users to keep scratch clear
+* Can we use the 20 TB SSD - what is this drive?
+
 
 ---
 
@@ -81,8 +151,8 @@ repquota -a
 ## Done
 
 #### Setup user location
-* Admin acccount(s) should be in /home - the smaller volume
-* The user accounts should be in the larger storage
+* Admin acccount(s) should be in /home - the smaller volume 
+* The user accounts should be in the larger storage /dev/sdb1 (/hddraid5)
 
 * Currently the users and admin (administrator, gonzalezlab) are in the same /home as users
 * The volume they are all in is /dev/sda2 the small 6.6T volume
@@ -106,27 +176,31 @@ Filesystem      Size  Used Avail Use% Mounted on
 /dev/sda2       7,0T   15G  6,6T   1% /
 ```
 
+I made a `/hddraid5/home` for all users homes to go in
+
 How to move an account (NOTE: this was done before anyone had actually used their accounts - with home directories containing real data we would take a more careful approach to moving and deleting the old home directories):
 
 ```{bash}
 UserToMove="dmckeown"
-NewLocation="/hddraid5/home"
+OldHome="/hddraid5/${UserToMove}"
+NewHome="/hddraid5/home/${UserToMove}"
 
-sudo mkdir -p ${NewLocation} ${NewLocation}/${UserToMove}
+sudo mkdir -p ${NewHome}
 
 # Move and check the system home (does not move files)
-sudo usermod --move-home --home ${NewLocation}/${UserToMove} ${UserToMove}
+sudo usermod --move-home --home ${NewHome} ${UserToMove}
 grep ${UserToMove} /etc/passwd
 
 # copy everything from the old home
-sudo rsync -a /home/${UserToMove}/ ${NewLocation}/${UserToMove}/
+sudo rsync -a ${OldHome}/ ${NewHome}/
 
 # fix ownership
-sudo chown -R ${UserToMove}:${UserToMove} ${NewLocation}/${UserToMove}
-sudo setfacl -d -m u::rwx,g::r-x,o::--- ${NewLocation}/${UserToMove}
+sudo chown -R ${UserToMove}:${UserToMove} ${NewHome}
+sudo setfacl -d -m u::rwx,g::r-x,o::--- ${NewHome}
+sudo getfacl ${NewHome}
 
 # Delete the old home dir - for a user with data we would check carefully that the rsync worked
-sudo rm -fr /home/${UserToMove}/
+sudo rm -fr ${OldHome}
 
 ```
 
@@ -137,8 +211,8 @@ I made an account like this and log in worked:
 
 ```{bash}
 NewUser="dmckeown"
-sudo adduser --home /hddraid5/${NewUser} ${NewUser}
-sudo setfacl -d -m u::rwx,g::r-x,o::--- /hddraid5/${NewUser}
+sudo adduser --home /hddraid5/home/${NewUser} ${NewUser}
+sudo setfacl -d -m u::rwx,g::r-x,o::--- /hddraid5/home/${NewUser}
 ```
 
 #### Setup user permissions
@@ -170,8 +244,8 @@ user::rwx
 group::r-x
 other::r-x
 
-gonzalezlab@slurm:/home$ getfacl ../hddraid5/dmckeown/
-# file: ../hddraid5/dmckeown/
+gonzalezlab@slurm:/home$ getfacl ../hddraid5/home/dmckeown/
+# file: ../hddraid5/home/dmckeown/
 # owner: dmckeown
 # group: dmckeown
 user::rwx
@@ -186,17 +260,17 @@ Then I logged into my user to test:
     * **No** - the subfolder has write permissions for the group, and read/execute for other
 
 ```{bash}
-gonzalezlab@slurm:/$ sudo getfacl hddraid5/dmckeown
-# file: hddraid5/dmckeown
+gonzalezlab@slurm:/$ sudo getfacl hddraid5/home/dmckeown
+# file: hddraid5/home/dmckeown
 # owner: dmckeown
 # group: dmckeown
 user::rwx
 group::r-x
 other::---
 
-gonzalezlab@slurm:/$ sudo getfacl hddraid5/dmckeown/test
+gonzalezlab@slurm:/$ sudo getfacl hddraid5/home/dmckeown/test
 [sudo] password for gonzalezlab: 
-# file: hddraid5/dmckeown/test
+# file: hddraid5/home/dmckeown/test
 # owner: dmckeown
 # group: dmckeown
 user::rwx
@@ -205,14 +279,15 @@ other::r-x
 
 ```
 This can be addressed by setting the default (-d) to the same as the top folder - we need to do this for each new user
-```
-sudo setfacl -d -m u::rwx,g::r-x,o::--- /hddraid5/dmckeown
+
+```{bash}
+sudo setfacl -d -m u::rwx,g::r-x,o::--- /hddraid5/home/dmckeown
 
 # Now the recreated folder has the same permssions:
 
-gonzalezlab@slurm:/$ sudo getfacl /hddraid5/dmckeown/test
+gonzalezlab@slurm:/$ sudo getfacl /hddraid5/home/dmckeown/test
 getfacl: Removing leading '/' from absolute path names
-# file: hddraid5/dmckeown/test
+# file: hddraid5/home/dmckeown/test
 # owner: dmckeown
 # group: dmckeown
 user::rwx
