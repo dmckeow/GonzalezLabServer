@@ -3,6 +3,7 @@ All notable changes to the cluster setup will be documented here in this file.
 Add entries in reverse chronological order.
 
 ---
+---
 
 # Template
 
@@ -16,11 +17,24 @@ A general note on what was done
 ### Fixed
 
 ---
+---
 
-# Template
+## dmckeown - 2025-08-18
+Second session setting up server - partitions & qos
+
+### Added
+- Added two QoS (normal was modified as it already existing) (README - Partitions, QoS)
+
+### Changed
+- The /etc/slurm/slurm.conf was edited to add different partitions and priority weighting (README - Partitions, QoS)
+
+### Fixed
+
+---
+
 
 ## dmckeown - 2025-08-14
-First admin setup work for the server
+First admin setup work for the server - user homes and quotas
 
 ### Added
 - I installed acl `sudo apt install acl` (README - Setup user permissions)

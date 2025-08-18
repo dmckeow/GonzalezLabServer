@@ -15,9 +15,19 @@ Filesystem      Size  Used Avail Use% Mounted on
 /dev/sdc1        21T   24K   20T   1% /ssdraid0
 ```
 
+### Useful commands
+
+```{bash}
+# See where a job went
+sacct -j <JOBID> -o JobID,JobName,Partition,NodeList,QOS,State,Elapsed,ExitCode
+```
+
+
 ## Issues
 * How to set a larger quota than 2 TB
 * Where put scratch?
+* How get scheduler to kill jobs over Time/Resource requests, instead of just pending?
+
 
 ## To do
 
@@ -106,12 +116,39 @@ setquota: Cannot write quota for 1003 on /dev/sdb1: Numerical result out of rang
 ```
 So for now we have soft limits of 2 TB, but I can't find a way to set limits beyond that
 
-#### Setup partitions (i.e. job queues)
+#### Partitions, QoS
 * Group wants an infinite queue?
 * Partition define nodes and walltime, qos can set the resources - so you can do fast partition, bigmem qos
-* We are 1 node, X cores, X CPUs
+* We are 1 node, 1 cores, 128 CPUs
 * Default partition
     * This is where users login, and where jobs without specified qos go
+
+Setting up the QoS
+
+```{bash}
+sudo sacctmgr modify qos normal set Description="Standard jobs" MaxTRESPerJob=cpu=32,mem=128G Flags=DenyOnLimit
+sudo sacctmgr add qos big Description="Big jobs" MaxTRESPerJob=cpu=64,mem=256G Flags=DenyOnLimit
+
+```
+
+Then we replaced the original slurm.conf (config_files/server_og_slurm.conf) with (config_files/slurm.conf), then:
+
+```{bash}
+# Reset to active the new slurm.conf
+sudo scontrol reconfigure
+sudo scontrol show config
+sudo systemctl restart slurmctld
+sudo systemctl restart slurmd
+
+# Check to see the partitions and qos
+sacctmgr show qos
+sinfo
+```
+* Do we need `Flags=DenyOnLimit`?
+
+Testing setting as user"
+* Any QoS can be used on any partition despite the slurm.conf...
+* Jobs submitted over limits just pend forever!
 
 #### Scratch setup
 * We won't use an auto delete for now, but request users to keep scratch clear
@@ -123,7 +160,7 @@ So for now we have soft limits of 2 TB, but I can't find a way to set limits bey
 ### Medium term
 
 #### Software management
-* Commonly available software via the module system:
+* Commonly available software:
     * Conda
     * R
 

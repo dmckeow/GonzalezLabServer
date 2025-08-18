@@ -1,0 +1,27 @@
+
+                _     ____   4   __  __  ____
+               / \   | __ )  _ |  \/  |/ ___|
+              / _ \  |  _ \ | || |\/| |\___ \ 
+             / ___ \ | |_) || || |  | | ___) |
+            /_/   \_\|____/ |_||_|  |_||____/ 
+
+      Analysis and Bioinformatics for Marine Science
+
+✅ Term of Usage: https://abims-sbr.gitlab.io/cluster/doc/terms-of-usage/
+📄 Documentation: https://abims-sbr.gitlab.io/cluster/doc/
+⚒️ Installed software: module avail blast
+                       module load blast/2.15.0
+🌱 SLURM job efficiency:
+         https://abims-sbr.gitlab.io/cluster/doc/slurm/slurm_efficiency/
+🛟 support.abims@sb-roscoff.fr
+
+🚫 Important:
+   - slurm1: Never launch job on this server -> Use srun --pty bash
+   - home ~/:   Never launch job from this space
+
+🙏 Please cite the plateform ABiMS in your publication Acknowledgements
+________________________________________________________________________
+
+Last login: Fri Aug 15 08:35:05 2025 from 83.51.239.33
+phaeoexplorer_data_deposit [##------------------]      25 /     250 GB
+       phaeoexplorer_virus [##################--]     946 /    1000 GB
