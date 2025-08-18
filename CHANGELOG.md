@@ -20,10 +20,14 @@ A general note on what was done
 ---
 
 ## dmckeown - 2025-08-18
-Second session setting up server - partitions & qos
+Second session setting up server - partitions & qos, first modules
 
 ### Added
 - Added two QoS (normal was modified as it already existing) (README - Partitions, QoS)
+- Installed make (README - Software)
+- Installed lmod (after uninstalling modules that I installed in error)
+- Installed conda 25.5.1 and added a module
+- Installed R 4.5.1 and added a module
 
 ### Changed
 - The /etc/slurm/slurm.conf was edited to add different partitions and priority weighting (README - Partitions, QoS)

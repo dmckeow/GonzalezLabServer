@@ -27,7 +27,7 @@ sacct -j <JOBID> -o JobID,JobName,Partition,NodeList,QOS,State,Elapsed,ExitCode
 * How to set a larger quota than 2 TB
 * Where put scratch?
 * How get scheduler to kill jobs over Time/Resource requests, instead of just pending?
-
+* Some non-login interactive sessions do not load /etc/profile so modules not available: https://github.com/microsoft/vscode-remote-release/issues/1671
 
 ## To do
 
@@ -159,10 +159,6 @@ Testing setting as user"
 
 ### Medium term
 
-#### Software management
-* Commonly available software:
-    * Conda
-    * R
 
 ---
 
@@ -336,3 +332,67 @@ default:other::---
 ```
 
 ---
+
+#### Software
+* Commonly available software:
+    * Conda
+    * R
+
+Setup conda
+
+```{bash}
+cd /tmp
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+sudo bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/conda
+
+# make test conda env
+sudo /opt/conda/bin/conda create -p /opt/conda/envs/python39 python=3.9
+```
+
+Setup modules
+NOT this one: https://modules.readthedocs.io/en/stable/INSTALL.html
+This one: https://lmod.readthedocs.io/en/latest/030_installing.html
+
+Followed the installation instructions then the setup:
+```{bash}
+sudo ln -s /usr/local/Modules/init/profile.sh /etc/profile.d/modules.sh
+sudo ln -s /usr/local/Modules/init/profile.csh /etc/profile.d/modules.csh
+
+```
+
+Make a module for conda
+
+https://arccwiki.atlassian.net/wiki/spaces/DOCUMENTAT/pages/2181923764/Create+a+Module+File+to+Load+Your+Conda+Environment
+
+The module is a lua file:
+
+```{bash}
+gonzalezlab@slurm:/$ cat /opt/apps/lmod/lmod/modulefiles/Core/conda/25.5.1.lua 
+-- Miniconda3 modulefile
+
+whatis("Name: conda")
+whatis("Version: 25.5.1")
+whatis("Category: Environment")
+whatis("Short Description: Conda environment management.")
+
+
+help([[
+Miniconda3 provides the conda package manager and Python distribution.
+Usage:
+   module load conda/25.5.1
+   conda create -n myenv python=3.10
+   conda activate myenv
+]])
+
+prepend_path("PATH","/opt/conda/bin/")
+```
+
+Then set up the path for modules
+
+```{bash}
+module avail # to see that it is not setup
+
+echo $MODULEPATH # Any lua files in these paths will be available
+```
+
+Able to load conda as a module and create an env just for my user
