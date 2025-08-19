@@ -1,43 +1,31 @@
-# GonzalezLabServer
-Management of the SLURM computing cluster of the Gonzalez lab at IBB
 
-## Information
+# To do
 
-**Server IP**: 161.111.135.76  
-**Filesystem**:  
-
-```{bash}
-gonzalezlab@slurm:~$ df -h
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda2       7,0T   15G  6,6T   1% /
-/dev/sda1       1,1G  6,1M  1,1G   1% /boot/efi
-/dev/sdb1        66T   24K   62T   1% /hddraid5
-/dev/sdc1        21T   24K   20T   1% /ssdraid0
-```
-
-### Useful commands
-
-```{bash}
-# See where a job went
-sacct -j <JOBID> -o JobID,JobName,Partition,NodeList,QOS,State,Elapsed,ExitCode
-```
-
-
-## Issues
-* How to set a larger quota than 2 TB
-* Where put scratch?
-* How get scheduler to kill jobs over Time/Resource requests, instead of just pending?
-* Some non-login interactive sessions do not load /etc/profile so modules not available: https://github.com/microsoft/vscode-remote-release/issues/1671
-
-## To do
+## Not started
 
 ### Short term
-
 
 #### Security
 * ssh-key login setup
 
+---
 
+### Long term
+
+#### Server status reporting
+* How to create an easily updated overview report that can be viewed here or in the repo
+
+#### Welcome message when users login
+* Key info and links to documentation
+* ASCII art and server name
+
+#### Backup setup
+* Rsync - how do we confirm backup is done?
+* Guidance for users to keep their own backups as well
+
+---
+
+## Partially Done
 
 #### User storage quota
 
@@ -114,14 +102,12 @@ gonzalezlab@slurm:/$ sudo setquota -u dmckeown 0 5368709120 0 0 /hddraid5
 setquota: Cannot set quota for user 1003 from kernel on /dev/sdb1: Numerical result out of range
 setquota: Cannot write quota for 1003 on /dev/sdb1: Numerical result out of range
 ```
+
+##### Issue
 So for now we have soft limits of 2 TB, but I can't find a way to set limits beyond that
 
+
 #### Partitions, QoS
-* Group wants an infinite queue?
-* Partition define nodes and walltime, qos can set the resources - so you can do fast partition, bigmem qos
-* We are 1 node, 1 cores, 128 CPUs
-* Default partition
-    * This is where users login, and where jobs without specified qos go
 
 Setting up the QoS
 
@@ -144,42 +130,10 @@ sudo systemctl restart slurmd
 sacctmgr show qos
 sinfo
 ```
-* Do we need `Flags=DenyOnLimit`?
 
-Testing setting as user"
-* Any QoS can be used on any partition despite the slurm.conf...
-* Jobs submitted over limits just pend forever!
-
-#### Scratch setup
-* We won't use an auto delete for now, but request users to keep scratch clear
-* Can we use the 20 TB SSD - what is this drive?
-
-
----
-
-### Medium term
-
-
----
-
-### Long term
-
-#### Server status reporting
-* How to create an easily updated overview report that can be viewed here or in the repo
-
----
-#### Welcome message
-* Key info and links to documentation
-* ASCII art and server name
-
-#### Backup setup
-* Rsync - how do we confirm backup is done?
-* Guidance for users to keep their own backups as well
-
-#### Documentation for users
-* Detailing the server setup, what partitions there are, how backups happen, etc
-
----
+##### Issue
+Testing setting as user:
+* Jobs submitted over resource or time limits just pend forever - user has to do scancel
 
 ## Done
 
@@ -395,4 +349,10 @@ module avail # to see that it is not setup
 echo $MODULEPATH # Any lua files in these paths will be available
 ```
 
-Able to load conda as a module and create an env just for my user
+* As a user I could:
+  * Load conda as a module and create an env, which went to my home
+  * Load R and install packages, which went to my home also
+
+
+##### Issue
+* Could this setup create problems in the future?
