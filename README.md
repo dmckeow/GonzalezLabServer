@@ -109,7 +109,7 @@ So for now we have soft limits of 2 TB, but I can't find a way to set limits bey
 
 #### Partitions, QoS
 
-Setting up the QoS
+##### Setting up the QoS
 
 ```{bash}
 sudo sacctmgr modify qos normal set Description="Standard jobs" MaxTRESPerJob=cpu=32,mem=128G Flags=DenyOnLimit
