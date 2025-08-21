@@ -19,6 +19,19 @@ A general note on what was done
 ---
 ---
 
+## dmckeown - 2025-08-21
+Adding R dependencies, reboot 
+
+### Added
+- Installed R system dependencies:
+  - `sudo apt install libfontconfig1-dev`
+
+### Changed
+- The system gave warning that it was not running the recent kernel available, so I did `sudo reboot`, few minutes later the system was running again
+### Fixed
+
+---
+
 ## dmckeown - 2025-08-18
 Second session setting up server - partitions & qos, first modules
 
@@ -28,7 +41,8 @@ Second session setting up server - partitions & qos, first modules
 - Installed lmod (after uninstalling modules that I installed in error)
 - Installed conda 25.5.1 and added a module
 - Installed R 4.5.1 and added a module
-- Installed R system dependencies: `sudo apt install libcurl4-openssl-dev libssl-dev pandoc`
+- Installed R system dependencies:
+  - `sudo apt install libcurl4-openssl-dev libssl-dev pandoc`
 
 ### Changed
 - The /etc/slurm/slurm.conf was edited to add different partitions and priority weighting (README - Partitions, QoS)
