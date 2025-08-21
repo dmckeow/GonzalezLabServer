@@ -25,6 +25,7 @@ Adding R dependencies, reboot
 ### Added
 - Installed R system dependencies:
   - `sudo apt install libfontconfig1-dev`
+  - `sudo apt install libx11-dev`
 
 ### Changed
 - The system gave warning that it was not running the recent kernel available, so I did `sudo reboot`, few minutes later the system was running again
