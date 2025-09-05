@@ -389,6 +389,8 @@ prepend_path("PATH","/opt/R/4.1.0/bin")
 ```
 
 ##### Install Repeatmodeler2
-
+Using the singularity (apptainer)
+https://github.com/Dfam-consortium/TETools
+* Got to the step of adding Dfam libraries - long download to add partition 1 Brachycera
 ##### Issue
 * Could this setup create problems in the future?

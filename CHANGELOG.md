@@ -34,7 +34,9 @@ Changing R and conda to allow multiple version installation
 - [QoS changes](README.md#partitions-and-qos).
   - I removed the QoS "big" `sudo sacctmgr remove qos name=big` and removed it from the slurm.conf
   - Changed QoS normal to have no memory or cpu limits
-
+- Installed apptainer (succesor to singularity)
+- Started RepeatModeler2 installation (via container for TEtools) in `/opt/Dfam_TEtools/1.94/`
+  - Need to add libraries - just Brachycera
 
 ### Fixed
 
