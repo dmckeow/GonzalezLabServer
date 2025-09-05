@@ -2,9 +2,6 @@
 All notable changes to the cluster setup will be documented here in this file. 
 Add entries in reverse chronological order.
 
----
----
-
 # Template
 
 ## contributor - yyyy-mm-dd
@@ -17,6 +14,31 @@ A general note on what was done
 ### Fixed
 
 ---
+
+# Logs
+
+## dmckeown - 2025-09-05
+Changing R and conda to allow multiple version installation
+
+### Added
+
+### Changed
+- Removed the previous conda 25.5.1 installation, and simply reinstalled it with a subfolder for its version, allowing multiple versions to be installed in future
+  - Updated the modules lua file to the new subfolder
+- Rebuilding R to allow multiple versions to be [installed](https://support.posit.co/hc/en-us/articles/215488098-Compiling-R-for-Multiple-installations-of-R-on-Linux)
+  - Rebuild the dependencies for R: `sudo apt-get build-dep r-base` (this seems to be a comprehensive)
+    - Includes dependencies manually installed before: e.g. `libx11-dev`
+  - Configure and build two versions of R, 4.1.0 and 4.5.2: [Install R with multiple versions](README.md#install-r-with-multiple-versions)
+    - The previous R 4.5.1 installation remains in /usr/local, but is not accessible via modules
+    - Tested conda and R as a user - can load conda envs, and install, load R packages - all good
+- [QoS changes](README.md#partitions-and-qos).
+  - I removed the QoS "big" `sudo sacctmgr remove qos name=big` and removed it from the slurm.conf
+  - Changed QoS normal to have no memory or cpu limits
+
+
+### Fixed
+
+
 ---
 
 ## dmckeown - 2025-08-21
@@ -42,8 +64,7 @@ Second session setting up server - partitions & qos, first modules
 - Installed lmod (after uninstalling modules that I installed in error)
 - Installed conda 25.5.1 and added a module
 - Installed R 4.5.1 and added a module
-  - `sudo apt install r-base`
-  - `sudo apt install r-base-dev`
+  - `sudo apt install r-base r-base-dev`
 - Installed R system dependencies:
   - `sudo apt install libcurl4-openssl-dev libssl-dev pandoc`
 

@@ -107,17 +107,21 @@ setquota: Cannot write quota for 1003 on /dev/sdb1: Numerical result out of rang
 So for now we have soft limits of 2 TB, but I can't find a way to set limits beyond that
 
 
-#### Partitions, QoS
-
-##### Setting up the QoS
+#### Partitions and QoS
 
 ```{bash}
 sudo sacctmgr modify qos normal set Description="Standard jobs" MaxTRESPerJob=cpu=32,mem=128G Flags=DenyOnLimit
+
+# This QoS was removed later because we don't need multiple QoS right now
 sudo sacctmgr add qos big Description="Big jobs" MaxTRESPerJob=cpu=64,mem=256G Flags=DenyOnLimit
 
-```
+# Change the normal qos to have no limits - the user settings will be used instead
+sudo sacctmgr modify qos normal set Flags-=DenyOnLimit
+sudo sacctmgr modify qos normal set MaxTRESPerJob=cpu=128,mem=773GB
 
-Then we replaced the original slurm.conf (config_files/server_og_slurm.conf) with (config_files/slurm.conf), then:
+```
+* Slurm settings such as partitions are set in `/etc/slurm/slurm.conf`
+* I replaced the original slurm.conf (config_files/server_og_slurm.conf) with (config_files/slurm.conf), then:
 
 ```{bash}
 # Reset to active the new slurm.conf
@@ -292,18 +296,7 @@ default:other::---
     * Conda
     * R
 
-Setup conda
-
-```{bash}
-cd /tmp
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-sudo bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/conda
-
-# make test conda env
-sudo /opt/conda/bin/conda create -p /opt/conda/envs/python39 python=3.9
-```
-
-Setup modules
+##### Install modules
 NOT this one: https://modules.readthedocs.io/en/stable/INSTALL.html
 This one: https://lmod.readthedocs.io/en/latest/030_installing.html
 
@@ -314,14 +307,22 @@ sudo ln -s /usr/local/Modules/init/profile.csh /etc/profile.d/modules.csh
 
 ```
 
-Make a module for conda
-
-https://arccwiki.atlassian.net/wiki/spaces/DOCUMENTAT/pages/2181923764/Create+a+Module+File+to+Load+Your+Conda+Environment
-
-The module is a lua file:
+##### Install conda with specific version
+It is **important** that all software is installed in a directory separate for each version, as this will allow us to manage multiple versions through the modules system - e.g. don't install in `/opt/conda`, install specific version in its own folder: `/opt/conda/Miniconda3-py39_25.5.1`
 
 ```{bash}
-gonzalezlab@slurm:/$ cat /opt/apps/lmod/lmod/modulefiles/Core/conda/25.5.1.lua 
+cd /tmp
+wget https://repo.anaconda.com/miniconda/Miniconda3-py39_25.5.1-1-Linux-x86_64.sh
+sudo bash Miniconda3-py39_25.5.1-1-Linux-x86_64.sh -b -p /opt/conda/Miniconda3-py39_25.5.1
+```
+
+Then make the module for conda:
+https://arccwiki.atlassian.net/wiki/spaces/DOCUMENTAT/pages/2181923764/Create+a+Module+File+to+Load+Your+Conda+Environment
+
+* The module is a lua file: `/opt/apps/lmod/lmod/modulefiles/Core/conda/25.5.1.lua`
+* Lmod uses any lua modules files in the module path: `echo $MODULEPATH`
+
+```{bash}
 -- Miniconda3 modulefile
 
 whatis("Name: conda")
@@ -334,25 +335,60 @@ help([[
 Miniconda3 provides the conda package manager and Python distribution.
 Usage:
    module load conda/25.5.1
-   conda create -n myenv python=3.10
+   conda create -n myenv python=3.9
    conda activate myenv
 ]])
 
-prepend_path("PATH","/opt/conda/bin/")
+prepend_path("PATH","/opt/conda/Miniconda3-py39_25.5.1/bin/")
 ```
-
+Check that it works
+```{bash}
+module avail
+module load 
+```
 Then set up the path for modules
 
 ```{bash}
 module avail # to see that it is not setup
-
-echo $MODULEPATH # Any lua files in these paths will be available
 ```
 
-* As a user I could:
-  * Load conda as a module and create an env, which went to my home
-  * Load R and install packages, which went to my home also
+##### Install R with multiple versions
+https://support.posit.co/hc/en-us/articles/215488098-Compiling-R-for-Multiple-installations-of-R-on-Linux
 
+```{bash}
+Rversion="4.1.0" # Change to the version to install - check the download path for the tarball
+wget https://cran.rstudio.com/src/base/R-4/R-${Rversion}.tar.gz
+tar -xzf R-${Rversion}.tar.gz
+cd R-${Rversion}/
+sudo ./configure --prefix=/opt/R/${Rversion} --enable-R-shlib
+sudo make
+sudo make install
+cd ..
+sudo rm -fr R-${Rversion}
+```
+
+Then make the lua file for modules at `/opt/apps/lmod/lmod/modulefiles/Core/R/4.1.0.lua`:
+
+```{bash}
+-- R/4.1.0 modulefile
+
+whatis("Name: R")
+whatis("Version: 4.1.0")
+whatis("Category: Environment")
+whatis("Short Description: R")
+
+
+help([[
+R.
+Usage:
+   module load R/4.1.0
+   R
+]])
+
+prepend_path("PATH","/opt/R/4.1.0/bin")
+```
+
+##### Install Repeatmodeler2
 
 ##### Issue
 * Could this setup create problems in the future?
