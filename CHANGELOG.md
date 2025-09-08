@@ -17,6 +17,18 @@ A general note on what was done
 
 # Logs
 
+## dmckeown - 2025-09-08
+Finishing RM2 installation
+
+### Added
+- Finished RepeatModeler2 installation and module for it
+- Installed Docker
+### Changed
+
+### Fixed
+
+---
+
 ## dmckeown - 2025-09-05
 Changing R and conda to allow multiple version installation
 
