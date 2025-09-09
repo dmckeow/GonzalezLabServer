@@ -394,6 +394,13 @@ https://github.com/Dfam-consortium/TETools
 * Got to the step of adding Dfam libraries - long download to add partition 1 Brachycera
 - the Dfam famdb is located in `/opt/Dfam_TEtools/1.94/Libraries/famdb`
 
+Getting the DFAM database:
+
+```{bash}
+cd /opt/Dfam_TEtools/1.94/Libraries/famdb
+#wget https://www.dfam.org/releases/current/families/FamDB/dfam39_full.0.h5.gz # root
+#wget https://www.dfam.org/releases/current/families/FamDB/dfam39_full.7.h5.gz # Brachycera insects
+```
 
 #### Issue
 * Could this setup create problems in the future?
