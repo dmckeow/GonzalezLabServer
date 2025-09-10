@@ -391,15 +391,13 @@ prepend_path("PATH","/opt/R/4.1.0/bin")
 ##### Install Repeatmodeler2
 Using the singularity (apptainer) via TEtools
 https://github.com/Dfam-consortium/TETools
-* Got to the step of adding Dfam libraries - long download to add partition 1 Brachycera
-- the Dfam famdb is located in `/opt/Dfam_TEtools/1.94/Libraries/famdb`
+- the TE databases are located in `/opt/Dfam_TEtools/1.94/Libraries`
 
 Getting the DFAM database:
 
 ```{bash}
 cd /opt/Dfam_TEtools/1.94/Libraries/famdb
-#wget https://www.dfam.org/releases/current/families/FamDB/dfam39_full.0.h5.gz # root
-#wget https://www.dfam.org/releases/current/families/FamDB/dfam39_full.7.h5.gz # Brachycera insects
+wget https://www.dfam.org/releases/current/families/FamDB/dfam39_full.0.h5.gz # root
 ```
 
 #### Issue
