@@ -195,30 +195,51 @@ sudo rm -fr ${OldHome}
 
 ```
 
-##### Making new users in future
+##### Adding a new user
 
 We made our first accounts with `sudo adduser dmckeown`, but we need to specify `home`.  
 I made an account like this and log in worked:
 
 ```{bash}
-NewUser="dmckeown"
-sudo adduser --home /hddraid5/home/${NewUser} ${NewUser}
-sudo setfacl -d -m u::rwx,g::r-x,o::--- /hddraid5/home/${NewUser}
+NewUser="guest"
+HomeDir="/hddraid5/home/${NewUser}"
+ScratchDir="/ssdraid0/${NewUser}"
+
+# Setup user and home dir, make scratch directory and set permissions
+sudo adduser --home "$HomeDir" "$NewUser" # Just enter any password it will be changed later
+sudo setfacl -m u::rwx,g::r-x,o::--- "$HomeDir"
+sudo setfacl -d -m u::rwx,g::r-x,o::--- "$HomeDir"
+sudo mkdir "$ScratchDir"
+sudo chown "${NewUser}:${NewUser}" "$ScratchDir"
+sudo setfacl -m u::rwx,g::r-x,o::--- "$ScratchDir"
+sudo setfacl -d -m u::rwx,g::r-x,o::--- "$ScratchDir"
+
+# Check the permissions
+getfacl $HomeDir
+getfacl $ScratchDir
+
+# Assign a temporary password
+TempPass=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c8)
+echo "${NewUser}:${TempPass}" | sudo chpasswd
+
+echo "Temporary password for ${NewUser}: $TempPass"
+
 ```
 
-#### Setup user permissions
-* Users should not have /home permissions
-    * Classic linux controls ok, maybe use ACL for an easier approach
+- Send the temporary password to the new user - they can change it themselves with `passwd`
 
-I decided to go with `acl` as it is simpler to use than classic linux commands - I installed it as the admin with `sudo apt install acl`
-
-* Checking the current permissions - they seem right:
-  * Users do not have write permissions in the root
-  * Users do not have read,write,execute for each other's home directories
-  * root begins everywhere outside of the user directories
+###### Notes on user setup
+- I decided to go with `acl` as it is simpler to use than classic linux commands - I installed it as the admin with `sudo apt install acl`
+- The `-d` (default) parameter for acl is essential as it means that when the user creates a file or folder, it will inherit the same permissions as the parent folder (their home)
+- Setting up users this way achieves the following essential conditions:
+  - Users do not have write permissions in the root
+  - Root begins everywhere outside of the user directories
+  - Users do not have read,write,execute for each other's home directories
+- Checking permissions with `acl` with `getfacl <directory>`:
 
 ```{bash}
-gonzalezlab@slurm:/home$ getfacl /
+# Here we can see that root begins everywhere
+getfacl /
 getfacl: Removing leading '/' from absolute path names
 # file: .
 # owner: root
@@ -227,7 +248,7 @@ user::rwx
 group::r-x
 other::r-x
 
-gonzalezlab@slurm:/home$ getfacl ../hddraid5/
+getfacl ../hddraid5/
 # file: ../hddraid5/
 # owner: root
 # group: root
@@ -235,50 +256,11 @@ user::rwx
 group::r-x
 other::r-x
 
-gonzalezlab@slurm:/home$ getfacl ../hddraid5/home/dmckeown/
+# But a users home directory belongs to them
+# Note that because user directory was setup with `-d` it has defaults
+
+getfacl ../hddraid5/home/dmckeown/
 # file: ../hddraid5/home/dmckeown/
-# owner: dmckeown
-# group: dmckeown
-user::rwx
-group::r-x
-other::---
-
-```
-
-Then I logged into my user to test:
-  * Can I write outside my home folder? **Nope**
-  * If I make a folder in my home, does it inherit the same permissions?
-    * **No** - the subfolder has write permissions for the group, and read/execute for other
-
-```{bash}
-gonzalezlab@slurm:/$ sudo getfacl hddraid5/home/dmckeown
-# file: hddraid5/home/dmckeown
-# owner: dmckeown
-# group: dmckeown
-user::rwx
-group::r-x
-other::---
-
-gonzalezlab@slurm:/$ sudo getfacl hddraid5/home/dmckeown/test
-[sudo] password for gonzalezlab: 
-# file: hddraid5/home/dmckeown/test
-# owner: dmckeown
-# group: dmckeown
-user::rwx
-group::rwx
-other::r-x
-
-```
-This can be addressed by setting the default (-d) to the same as the top folder - we need to do this for each new user
-
-```{bash}
-sudo setfacl -d -m u::rwx,g::r-x,o::--- /hddraid5/home/dmckeown
-
-# Now the recreated folder has the same permssions:
-
-gonzalezlab@slurm:/$ sudo getfacl /hddraid5/home/dmckeown/test
-getfacl: Removing leading '/' from absolute path names
-# file: hddraid5/home/dmckeown/test
 # owner: dmckeown
 # group: dmckeown
 user::rwx
@@ -393,11 +375,31 @@ Using the singularity (apptainer) via TEtools
 https://github.com/Dfam-consortium/TETools
 - the TE databases are located in `/opt/Dfam_TEtools/1.94/Libraries`
 
-Getting the DFAM database:
+Getting the DFAM database (3.9):
 
 ```{bash}
+
 cd /opt/Dfam_TEtools/1.94/Libraries/famdb
-wget https://www.dfam.org/releases/current/families/FamDB/dfam39_full.0.h5.gz # root
+
+# Create a file with all DFAM FamDB URLs
+for i in {0..16}; do
+    echo "https://www.dfam.org/releases/Dfam_3.9/families/FamDB/dfam39_full.$i.h5.gz"
+done > dfam_files.txt
+
+aria2c -i dfam_files.txt -j 8 -x 16
+# aria2c -i dfam_files.txt -j 8 -x 16 -c # rerun with c if interrupted
+
+
+for f in dfam39_full.*.h5.gz; do
+  gunzip $f
+done
+
+
+cd /opt/Dfam_TEtools/1.94/Libraries
+wget https://www.dfam.org/releases/Dfam_3.9/families/Dfam-curated_only-1.embl.gz
+gunzip Dfam-curated_only-1.embl.gz
+aria2c -x 16 https://www.dfam.org/releases/Dfam_3.9/families/Dfam-curated_only-1.hmm.gz
+gunzip Dfam-curated_only-1.hmm.gz
 ```
 
 #### Issue
