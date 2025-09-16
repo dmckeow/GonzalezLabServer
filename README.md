@@ -383,7 +383,7 @@ cd /opt/Dfam_TEtools/1.94/Libraries/famdb
 
 # Create a file with all DFAM FamDB URLs
 for i in {0..16}; do
-    echo "https://www.dfam.org/releases/Dfam_3.9/families/FamDB/dfam39_full.$i.h5.gz"
+  echo "https://www.dfam.org/releases/Dfam_3.9/families/FamDB/dfam39_full.${i}.h5.gz"
 done > dfam_files.txt
 
 aria2c -i dfam_files.txt -j 8 -x 16
