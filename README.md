@@ -29,11 +29,11 @@
 
 #### User storage quota
 
-* Our volume hddraid5 is ext4, so we use `quota` for it
+* Our volume ssdraid0 is ext4, so we use `quota` for it
 ```{bash}
-dmckeown@slurm:~$ df -T /hddraid5/
-Filesystem     Type   1K-blocks   Used   Available Use% Mounted on
-/dev/sdb1      ext4 70029236528 616228 66513095692   1% /hddraid5
+df -T /ssdraid0/
+#Filesystem     Type   1K-blocks     Used   Available Use% Mounted on
+#/dev/sdc1      ext4 22412174456 46328516 21240691228   1% /ssdraid0
 ```
 * Installed `quota`
 
@@ -45,13 +45,14 @@ repquota -a
 ```{bash}
 sudo vim /etc/fstab
 # then added ',usrquota':
-# /dev/disk/by-uuid/12825e18-edf6-4a37-8f1c-74943284b5ae /hddraid5 ext4 defaults,usrquota 0 1
-# /dev/disk/by-uuid/12825e18-edf6-4a37-8f1c-74943284b5ae /hddraid5 ext4 defaults 0 1
+# /dev/disk/by-uuid/12825e18-edf6-4a37-8f1c-74943284b5ae /ssdraid0 ext4 defaults,usrquota 0 1
+# /dev/disk/by-uuid/12825e18-edf6-4a37-8f1c-74943284b5ae /ssdraid0 ext4 defaults 0 1
 
 
-sudo mount -o remount /hddraid5
+sudo mount -o remount /ssdraid0
 
-sudo quotaon /hddraid5
+sudo quotacheck -cugv /ssdraid0
+sudo quotaon /ssdraid0
 
 # Now we have turned quota on, but it is not set to anything
 gonzalezlab@slurm:/$ sudo repquota -s -a
@@ -72,7 +73,20 @@ gsabaris  --     16K      0K      0K              4     0     0
 # Soft limits can be surpassed but give a warning, hard limits cannot be passed
 # 0 means no limit
 
-sudo setquota -u dmckeown 2147483647 0 0 0 /hddraid5
+# Set quota limits (soft, hard, inode soft, inode hard)
+SOFT=1610612736
+HARD=3221225472
+ISoft=0
+IHard=0
+FS=/ssdraid0
+
+# Loop through all normal users (UID >= 1000)
+for user in $(awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' /etc/passwd | sed '/administrador\|slurm\|gonzalezlab/d'); do
+    sudo setquota -u $user $SOFT $HARD $ISoft $IHard $FS
+done
+
+sudo repquota -a -s
+
 
 # You can use edquota -u dmckeown to change these later
 
@@ -95,6 +109,7 @@ gsabaris  --     16K      0K      0K              4     0     0
 
 
 ```
+* Also tried this for the /hddraid5 but abandoned it because we want larger quotas
 * The system block size must be changed to allow a larger quota, e.g. I cannot set a limit of 20 TB:
 
 ```{bash}

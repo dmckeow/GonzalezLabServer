@@ -17,6 +17,17 @@ A general note on what was done
 
 # Logs
 
+## contributor - 2025-09-29
+Added storage quota to scratch drive
+
+### Added
+
+### Changed
+- Put 1.5 TB soft, 3 TB hard storage quota on /ssdraid0 per user
+### Fixed
+
+---
+
 ## dmckeown - 2025-09-08
 Finishing RM2 installation
 
