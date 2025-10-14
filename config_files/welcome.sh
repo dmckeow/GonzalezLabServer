@@ -33,8 +33,8 @@ if command -v quota &> /dev/null; then
     used_unit = $2; sub(/^[0-9.]+/, "", used_unit)
 
     # Extract numeric value and unit for quota
-    quota_num = $3; sub(/[A-Za-z]+$/, "", quota_num)
-    quota_unit = $3; sub(/^[0-9.]+/, "", quota_unit)
+    quota_num = $4; sub(/[A-Za-z]+$/, "", quota_num)
+    quota_unit = $4; sub(/^[0-9.]+/, "", quota_unit)
 
     # Convert used to bytes
     if (used_unit=="M") used_b = used_num * 1024 * 1024
@@ -50,7 +50,7 @@ if command -v quota &> /dev/null; then
 
     if (quota_b > 0) pct = int(used_b / quota_b * 100); else pct = 0
 
-    printf "%-10s : %3d%% used (%s of %s)\n", $1, pct, $2, $3
+    printf "%-10s : %3d%% used (%s of %s)\n", $1, pct, $2, $4
 }' | sed "s/\/dev\/sdc1/HOME:    \/hddraid5\/${USER}/g" | sed "s/\/dev\/sdb1/SCRATCH: \/ssdraid0\/${USER}/g"
 
 
