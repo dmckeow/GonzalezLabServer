@@ -51,7 +51,7 @@ if command -v quota &> /dev/null; then
     if (quota_b > 0) pct = int(used_b / quota_b * 100); else pct = 0
 
     printf "%-10s : %3d%% used (%s of %s)\n", $1, pct, $2, $4
-}' | sed "s/\/dev\/sdc1/HOME:    \/hddraid5\/${USER}/g" | sed "s/\/dev\/sdb1/SCRATCH: \/ssdraid0\/${USER}/g"
+}' | sed "s/\/dev\/sdb1/HOME:    \/hddraid5\/${USER}/g" | sed "s/\/dev\/sdc1/SCRATCH: \/ssdraid0\/${USER}/g"
 
 
 else
