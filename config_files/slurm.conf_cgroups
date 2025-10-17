@@ -1,0 +1,62 @@
+# =========================
+# slurm.conf — single-node
+# =========================
+
+# -------- CONTROL --------
+ClusterName=localcluster
+SlurmctldHost=slurm
+MpiDefault=none
+AuthType=auth/munge
+ReturnToService=2
+
+# PIDs / LOGS / STATE
+SlurmctldPidFile=/var/run/slurmctld.pid
+SlurmdPidFile=/var/run/slurmd.pid
+SlurmctldLogFile=/var/log/slurm-llnl/slurmctld.log
+SlurmdLogFile=/var/log/slurm-llnl/slurmd.log
+StateSaveLocation=/var/lib/slurm-llnl   # persistencia de estado
+
+# ---- INTEGRACIÓN CGROUP ----
+# (clave para aplicar límites reales de CPU/RAM)
+ProctrackType=proctrack/cgroup
+TaskPlugin=task/cgroup
+JobAcctGatherType=jobacct_gather/cgroup
+JobAcctGatherFrequency=30
+
+# ---- SCHEDULING / CORE ACCOUNTING ----
+SchedulerType=sched/backfill
+SelectType=select/cons_tres
+SelectTypeParameters=CR_Core   # asigna núcleos físicos; evita oversubscription por SMT
+
+# ---- ACCOUNTING (opcional; ajusta si usas BD) ----
+# JobAcctGatherType ya está arriba (cgroup)
+# AccountingStorageType=accounting_storage/slurmdbd
+# AccountingStorageHost=localhost
+# AccountingStorageUser=slurm
+# AccountingStoragePass=
+# AccountingStoragePort=6819
+
+# ---- MULTIFACTOR JOB PRIORITY ----
+PriorityType=priority/multifactor
+PriorityDecayHalfLife=3-0
+PriorityFavorSmall=YES
+PriorityMaxAge=14-0
+PriorityWeightAge=1000
+PriorityWeightFairshare=2000
+PriorityWeightJobSize=1000
+PriorityWeightPartition=1000
+PriorityWeightQOS=0
+
+# -------- COMPUTE NODES --------
+# Describe tu nodo físico. Ajusta memoria si cambia.
+# Ejemplo: 1 socket, 128 cores por socket, 2 hilos por core (SMT on)
+NodeName=slurm Sockets=1 CoresPerSocket=128 ThreadsPerCore=2 RealMemory=773232 State=idle
+
+# -------- PARTITIONS --------
+PartitionName=short    Nodes=slurm MaxTime=1-00:00:00  State=UP PriorityTier=4 QOS=normal OverTimeLimit=0 DefMemPerCPU=2000 Default=YES
+PartitionName=normal   Nodes=slurm MaxTime=7-00:00:00  State=UP PriorityTier=3 QOS=normal OverTimeLimit=0 DefMemPerCPU=2000
+PartitionName=long     Nodes=slurm MaxTime=30-00:00:00 State=UP PriorityTier=2 QOS=normal OverTimeLimit=0 DefMemPerCPU=2000
+PartitionName=marathon Nodes=slurm MaxTime=60-00:00:00 State=UP PriorityTier=1 QOS=normal OverTimeLimit=0 DefMemPerCPU=2000
+
+# (Opcional de depuración puntual)
+# DebugFlags=CpuBind,gres,Backfill

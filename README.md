@@ -251,3 +251,36 @@ gunzip Dfam-curated_only-1.hmm.gz
 
 #### Issue
 * Could this setup create problems in the future?
+
+##### cgroups activation
+- Do once cluster not in use
+
+1. Backup **current** slurm.conf in (I saved it as `config_files/slurm.conf_original`)
+
+2. Replace the current slurm.conf with the one with cgroups enabled `config_files/slurm.conf_cgroups` > `/etc/slurm/slurm.conf`
+
+3. Put the cgroup config file in the same directory `config_files/cgroup.conf` > `/etc/slurm/cgroup.conf`
+
+4. In terminal, do:
+
+```{bash}
+sudo tee /etc/slurm/cgroup_allowed_devices_file.conf >/dev/null <<'EOF'
+/dev/null
+/dev/zero
+/dev/urandom
+/dev/random
+EOF
+```
+- This will need to updated later if nvidia devices are added
+
+5. Restart the system
+- Only do with no users logged in and jobs running!
+
+```{bash}
+sudo systemctl restart slurmctld slurmd
+```
+
+6. Check if it worked
+
+- Once restarted, the system will work with cgroup. So in System > Running Processes (Webmin), you should not see any CPU process above number of cores. The 5500% use of CPU should dissapear. To fix de limits put at the script for instance --cpus-per-task=4 (4, 10, whatever) or do it by user with MaxCPUsPerUser, GrpCPUs etc.
+
