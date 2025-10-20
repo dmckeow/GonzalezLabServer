@@ -255,11 +255,11 @@ gunzip Dfam-curated_only-1.hmm.gz
 ##### cgroups activation
 - Do once cluster not in use
 
-1. Backup **current** slurm.conf in (I saved it as `config_files/slurm.conf_original`)
+1. Backup **current** slurm.conf in (I saved it as `sudo cp /etc/slurm/slurm.conf config_files/slurm.conf_original`)
 
-2. Replace the current slurm.conf with the one with cgroups enabled `config_files/slurm.conf_cgroups` > `/etc/slurm/slurm.conf`
+2. Replace the current slurm.conf with the one with cgroups enabled `sudo cp config_files/slurm_cgroups.conf /etc/slurm/slurm.conf`
 
-3. Put the cgroup config file in the same directory `config_files/cgroup.conf` > `/etc/slurm/cgroup.conf`
+3. Put the cgroup config file in the same directory `sudo cp config_files/cgroup.conf /etc/slurm/cgroup.conf`
 
 4. In terminal, do:
 
@@ -282,5 +282,8 @@ sudo systemctl restart slurmctld slurmd
 
 6. Check if it worked
 
+`sudo systemctl status slurmctld slurmd`
+
 - Once restarted, the system will work with cgroup. So in System > Running Processes (Webmin), you should not see any CPU process above number of cores. The 5500% use of CPU should dissapear. To fix de limits put at the script for instance --cpus-per-task=4 (4, 10, whatever) or do it by user with MaxCPUsPerUser, GrpCPUs etc.
 
+- Currently did not work
