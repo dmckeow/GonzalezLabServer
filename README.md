@@ -287,3 +287,20 @@ sudo systemctl restart slurmctld slurmd
 - Once restarted, the system will work with cgroup. So in System > Running Processes (Webmin), you should not see any CPU process above number of cores. The 5500% use of CPU should dissapear. To fix de limits put at the script for instance --cpus-per-task=4 (4, 10, whatever) or do it by user with MaxCPUsPerUser, GrpCPUs etc.
 
 - Currently did not work
+
+### Install Kraken2
+
+1. `sudo /opt/conda/Miniconda3-py39_25.5.1/bin/conda create -p /opt/conda/envs/kraken2 -c bioconda -c conda-forge kraken2`
+
+
+`conda activate /opt/conda/envs/kraken2`
+
+2. Make lua and copy it to 
+
+```{bash}
+sudo mkdir -p /opt/apps/lmod/lmod/modulefiles/Core/kraken2
+sudo cp modulefiles/Core/kraken2/2.1.6.lua /opt/apps/lmod/lmod/modulefiles/Core/kraken2/
+```
+
+3. Kraken database
+`/hddraid5/home/gabmm/Software/Kraken2/db_k2_standard_20250714.tar.gz`
