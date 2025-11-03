@@ -23,9 +23,9 @@ mkdir -p output/lib_compare
 blastn -query "${MCH_lib}" \
   -db "${lib1}" \
   -outfmt 6 -max_hsps 1 \
-  -out "output/lib_compare/lib_compare_MCHelperAuto_vs_${species}-${strain}-${lib1}.blast.out"
+  -out "output/lib_compare/lib_compare_MCHelperAuto_vs_${species}-${strain}-lib1.blast.out"
 
 blastn -query "${MCH_lib}" \
   -db "${lib2}" \
   -outfmt 6 -max_hsps 1 \
-  -out "output/lib_compare/lib_compare_MCHelperAuto_vs_${species}-${strain}-${lib2}.blast.out"
+  -out "output/lib_compare/lib_compare_MCHelperAuto_vs_${species}-${strain}-lib2.blast.out"
